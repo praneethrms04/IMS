@@ -6,7 +6,7 @@ const NoteSchema = new Schema({
     type: String,
     required: true,
   },
-  ownerOfItem: {
+  ownerOfTheItem: {
     type: String,
     required: true,
   },

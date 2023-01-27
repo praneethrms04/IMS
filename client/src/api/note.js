@@ -7,9 +7,24 @@ export const getAllNotes = async () => {
   return await axios.get(url);
 };
 
-export async function noteCreation(data) {
-  return await axios.post(`${BASE_URL}/addnotes`, data);
-}
+// export async function noteCreation(data) {
+//   return await axios.post(`${BASE_URL}/addnotes`, data);
+// }
+
+export const noteCreation = async (data) => {
+  const { itemName, ownerOfTheItem, vendorName } = data;
+  const config = {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+  };
+  const body = JSON.stringify({ itemName, ownerOfTheItem, vendorName });
+  try {
+    return await axios.post(`${BASE_URL}/addnotes`, body, config);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const getNoteDetails = async (noteId) => {
   const url = `${BASE_URL}/notes/${noteId}`;

@@ -1,10 +1,12 @@
 const express = require("express");
-const cors = require('cors')
+const cors = require("cors");
 const NoteSchema = require("./models/model");
+// const bodyParser = require("body-parser");
+// app.use(bodyParser.urlencoded({ extended: true }));
 
 const app = express();
 app.use(express.json());
-app.use(cors({origin:'*'}))
+app.use(cors({ origin: "*" }));
 
 const mongoose = require("mongoose");
 
@@ -56,14 +58,29 @@ app.get("/notes/:id", (req, res) => {
 
 // Create a new note
 app.post("/addnotes", async (req, res) => {
-  const { itemName, ownerOfItem, vendorName } = req.body;
   try {
-    const newNote = new NoteSchema({ itemName, ownerOfItem, vendorName });
-    await newNote.save();
-    return res.json(await NoteSchema.find());
+    const { itemName, ownerOfTheItem, vendorName } = req.body;
+    console.log('data from frontend', req.body)
+    const newNote =await new NoteSchema({
+      itemName,
+      ownerOfTheItem,
+      vendorName,
+    }).save();
+    return res.json({newNote, message :"new note created" });
   } catch (error) {
     console.log(error.message);
+    res.json('failed to create a note')
   }
+});
+// Delete a note
+app.delete("/notes/:id", (req, res) => {
+  NoteSchema.findByIdAndRemove(req.params.id, (err, note) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.status(200).send(note);
+    }
+  });
 });
 // update a note
 app.put("/notes/:id", (req, res) => {
@@ -79,16 +96,6 @@ app.put("/notes/:id", (req, res) => {
       }
     }
   );
-});
-// Delete a note
-app.delete("/notes/:id", (req, res) => {
-  NoteSchema.findByIdAndRemove(req.params.id, (err, note) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.status(200).send(note);
-    }
-  });
 });
 
 const PORT = 5000;

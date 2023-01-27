@@ -1,6 +1,8 @@
 import MaterialTable from "@material-table/core";
 import { Form, Row, Col, Modal, Button } from "react-bootstrap";
+import { noteCreation } from "../../api/note";
 import axios from "axios";
+
 import { ExportCsv, ExportPdf } from "@material-table/exporters";
 
 import { Delete, Edit } from "@material-ui/icons";
@@ -11,16 +13,40 @@ const TableList = () => {
   const [notes, setNotes] = useState([]);
   const [noteUpdationModal, setNoteUpdationModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState({});
+  const [showaddmodal, setShowAddModal] = useState(false);
+
   // const updateSelectedCurrNote = (data) => setSelectedNote(data);
   const closeNoteUpdationModal = () => setNoteUpdationModal(false);
 
   useEffect(() => {
     fetchNotes();
     deleteNote();
-    // updateNote();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // post api
+  const createNote = async function getNotes(e) {
+    e.preventDefault();
+    const data = {
+      itemName: e.target.itemName.value,
+      ownerOfTheItem: e.target.ownerOfTheItem.value,
+      vendorName: e.target.vendorName.value,
+      lastServiceDate: e.target.lastServiceDate.value,
+    };
+    noteCreation(data)
+      .then((response) => {
+        if (response.status === 200) {
+          console.log(response);
+          alert("you have successfully created ..! please refresh it.");
+          setShowAddModal(false);
+          fetchNotes();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+// get api grab the data
   const fetchNotes = async function getNotes() {
     try {
       const { data } = await axios.get("http://localhost:5000/notes");
@@ -29,30 +55,14 @@ const TableList = () => {
       console.error(error);
     }
   };
-  // const updateNote = async function handleEdit(id, updatedNote) {
-  //   console.log(id);
-  //   try {
-  //     await axios.put(`http://localhost:5000/notes/${id}`, updatedNote);
-  //     //find the index of the note to be edited
-  //     const index = notes.findIndex((note) => note.id === id);
-  //     //create a new array with the edited note
-  //     const updatedNotes = [
-  //       ...notes.slice(0, index),
-  //       updatedNote,
-  //       ...notes.slice(index + 1),
-  //     ];
-  //     setNotes(updatedNotes);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
 
+  // update a note
   const editNote = (noteDetail) => {
     // console.log(noteDetail);
     const note = {
       id: noteDetail._id,
       itemName: noteDetail.itemName,
-      ownerOfItem: noteDetail.ownerOfItem,
+      ownerOfTheItem: noteDetail.ownerOfTheItem,
       vendorName: noteDetail.vendorName,
       lastServiceDate: noteDetail.lastServiceDate,
     };
@@ -61,17 +71,12 @@ const TableList = () => {
     console.log(note);
   };
 
-  // const updateNote = (noteDetail) => {
-  //   setSelectedNote({ ...noteDetail });
-  //   setNoteUpdationModal(true);
-  // };
-
   const handleNoteChange = (e) => {
     const tempNote = { ...selectedNote };
     if (e.target.name === "itemName") {
       selectedNote.itemName = e.target.value;
     } else if (e.target.name === "ownerOfItem") {
-      selectedNote.ownerOfItem = e.target.value;
+      selectedNote.ownerOfTheItem = e.target.value;
     } else if (e.target.name === "vendorName") {
       selectedNote.vendorName = e.target.value;
     } else if (e.target.name === "lastServiceDate") {
@@ -84,7 +89,7 @@ const TableList = () => {
     e.preventDefault();
     const data = {
       itemName: selectedNote.itemName,
-      ownerOfItem: selectedNote.ownerOfItem,
+      ownerOfTheItem: selectedNote.ownerOfItem,
       vendorName: selectedNote.vendorName,
     };
     try {
@@ -105,7 +110,7 @@ const TableList = () => {
       // show error in the modal
     }
   };
-
+// Delete an Item
   const deleteNote = async function handleDelete(rowData) {
     try {
       let noteId = rowData._id;
@@ -113,6 +118,9 @@ const TableList = () => {
       //filter out the deleted note from the state
       // update state to remove the deleted note
       if (window.confirm("Are you sure you want to delete this note?")) {
+        alert(
+          "you have successfylly deleted ..! refresh the page to see the updated data"
+        );
         setNotes(notes.filter((note) => note.id !== noteId));
       } else {
         setNotes(notes);
@@ -124,18 +132,27 @@ const TableList = () => {
 
   const columns = [
     { title: "itemName", field: "itemName" },
-    { title: "ownerOfItem", field: "ownerOfItem" },
+    { title: "ownerOfTheItem", field: "ownerOfTheItem" },
     { title: "vendorName", field: "vendorName" },
     { title: "lastServiceDate", field: "lastServiceDate" },
   ];
 
   return (
     <>
+      <div className="text-center pt-3 pb-3">
+        <button
+          className="btn btn-lg btn-success"
+          onClick={() => setShowAddModal(true)}
+        >
+          Add Note
+        </button>
+      </div>
+
       <div style={{ maxWidth: "100%" }}>
         <MaterialTable
           columns={columns}
           data={notes}
-          title="Inventory Manaement System"
+          title="Item Details"
           actions={[
             {
               icon: Edit,
@@ -157,16 +174,16 @@ const TableList = () => {
               {
                 label: "Export PDF",
                 exportFunc: (cols, datas) =>
-                  ExportPdf(cols, datas, "UserRecords"),
+                  ExportPdf(cols, datas, "Item Records"),
               },
               {
                 label: "Export CSV",
                 exportFunc: (cols, datas) =>
-                  ExportCsv(cols, datas, "userRecords"),
+                  ExportCsv(cols, datas, "Item Records"),
               },
             ],
             headerStyle: {
-              backgroundColor: "#000",
+              backgroundColor: "blue",
               color: "#fff",
               marginRight: "50px",
             },
@@ -212,7 +229,7 @@ const TableList = () => {
                     <Form.Control
                       type="text"
                       name="ownerOfItem"
-                      value={selectedNote.ownerOfItem}
+                      value={selectedNote.ownerOfTheItem}
                       onChange={handleNoteChange}
                       placeholder="Owner of the Item"
                     />
@@ -258,6 +275,77 @@ const TableList = () => {
           </Modal>
         </div>
       )}
+      <div>
+        {showaddmodal ? (
+          <Modal
+            show={showaddmodal}
+            backdrop="static"
+            centered
+            onHide={() => setShowAddModal(false)}
+          >
+            <Modal.Header closeButton>Create a new Ticket</Modal.Header>
+            <Modal.Body>
+              <form onSubmit={createNote} method="POST">
+                <div className="input-group m-1">
+                  <label className="label label-md input-group-text">
+                    Item Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="itemName"
+                    required
+                  />
+                </div>
+                <div className="input-group m-1">
+                  <label className="label label-md input-group-text">
+                    Owner of the Item
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="ownerOfTheItem"
+                    required
+                  />
+                </div>
+                <div className="input-group m-1">
+                  <label className="label label-md input-group-text">
+                    Vendor Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="vendorName"
+                    required
+                  />
+                </div>
+                <div className="input-group m-1">
+                  <label className="label label-md input-group-text">
+                    lastServiceDate
+                  </label>
+                  <input
+                    type="Date"
+                    className="form-control"
+                    name="lastServiceDate"
+                  />
+                </div>
+                <div className="d-flex justify-content-end">
+                  <Button
+                    variant="secondary"
+                    className="m-1"
+                    onClick={() => setShowAddModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button className="m-1" type="submit" variant="success">
+                    Create
+                  </Button>
+                </div>
+              </form>
+            </Modal.Body>
+          </Modal>
+        ) : null}
+      </div>
     </>
   );
 };
